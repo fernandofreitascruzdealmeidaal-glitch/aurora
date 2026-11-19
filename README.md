@@ -46,6 +46,24 @@ aurora servir                      # 2. ligar (na primeira vez, carrega o conte�
 
 Abra **http://127.0.0.1:8000**. Para outras pessoas da rede acessarem: `aurora servir --host 0.0.0.0`.
 
+## Aurora no computador (Windows) — sem terminal
+
+Baixe o instalador na página de versões (Releases) do repositório:
+**https://github.com/fernandofreitascruzdealmeidaal-glitch/aurora/releases** → a versão
+"Aurora para Windows" mais recente → **Aurora-Instalador-Windows.exe**.
+
+1. Dê dois cliques no instalador. Se aparecer *"O Windows protegeu o computador"*, clique em
+   **Mais informações → Executar assim mesmo** (o programa ainda não tem assinatura digital paga).
+2. Não precisa de senha de administrador. Ao terminar, a Aurora abre sozinha e fica no menu Iniciar
+   (e na Área de Trabalho, se você marcar).
+3. Junto com a janela da Aurora aparece um **painel de controle** com:
+   o endereço para o **app do celular**, a **senha da área da equipe** (criada automaticamente)
+   e o botão **Encerrar**.
+
+Na primeira vez, o Windows pode perguntar se a Aurora pode usar a rede: permita em **redes
+privadas** para o celular conseguir acessar. Os dados ficam em `%LOCALAPPDATA%\Aurora` e são
+mantidos mesmo se você desinstalar.
+
 ## Aurora como app
 
 A Aurora pode ser usada de duas formas no celular:

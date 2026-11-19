@@ -25,6 +25,7 @@ dev = [
 
 [project.scripts]
 aurora = "aurora.cli:main"
+aurora-app = "aurora.desktop:main"  # abre como app de computador
 
 [tool.setuptools.packages.find]
 include = ["aurora*"]
