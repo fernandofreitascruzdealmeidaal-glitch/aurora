@@ -17,6 +17,44 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  pelo-python:
+    # O caminho que funciona com o "Controle Inteligente de Aplicativos" ligado:
+    # instala com o pip direto do GitHub e cria atalhos que usam o Python (assinado).
+    name: Instalação pelo Python (Python ${{ matrix.python }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Instalar exatamente como o usuário (link do GitHub)
+        run: python -m pip install --user "https://github.com/${{ github.repository }}/archive/${{ github.sha }}.zip#subdirectory=servidor"
+
+      - name: Criar atalhos
+        run: python -m aurora.atalho --sem-abrir
+
+      - name: Conferir os atalhos com o próprio Windows
+        shell: pwsh
+        run: |
+          $menu = Join-Path ([Environment]::GetFolderPath("Programs")) "Aurora.lnk"
+          $area = Join-Path ([Environment]::GetFolderPath("Desktop")) "Aurora.lnk"
+          $shell = New-Object -ComObject WScript.Shell
+          foreach ($lnk in @($menu, $area)) {
+            if (-not (Test-Path $lnk)) { Write-Error "Faltou o atalho $lnk"; exit 1 }
+            $a = $shell.CreateShortcut($lnk)
+            Write-Host "$lnk -> $($a.TargetPath) $($a.Arguments) (ícone: $($a.IconLocation))"
+            if ($a.TargetPath -notmatch "pythonw\.exe$") { Write-Error "Destino errado"; exit 1 }
+            if ($a.Arguments -ne "-m aurora.desktop") { Write-Error "Argumentos errados"; exit 1 }
+            if (-not (Test-Path ($a.IconLocation -replace ",\d+$", ""))) { Write-Error "Ícone não encontrado"; exit 1 }
+          }
+
+      - name: Ligar a Aurora pelo Python e conferir
+        run: python -m aurora.desktop --verificar --porta 18910 --so-neste-computador --pasta "${{ runner.temp }}\aurora-py"
+
   instalador:
     name: Instalador Windows
     runs-on: windows-latest

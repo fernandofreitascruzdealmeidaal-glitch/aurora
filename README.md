@@ -46,7 +46,23 @@ aurora servir                      # 2. ligar (na primeira vez, carrega o conte�
 
 Abra **http://127.0.0.1:8000**. Para outras pessoas da rede acessarem: `aurora servir --host 0.0.0.0`.
 
-## Aurora no computador (Windows) — sem terminal
+## Aurora no computador (Windows) — se o Windows bloquear o instalador
+
+No Windows 11, o **Controle Inteligente de Aplicativos** bloqueia programas novos sem assinatura
+digital paga — incluindo o instalador da Aurora — sem oferecer "Executar assim mesmo". Nesse caso,
+**não precisa desligar a proteção**: instale pelo Python (que é assinado).
+
+1. Tenha o Python 3.10 ou mais novo (python.org). Ele já vem com o comando `py`.
+2. Abra o **Terminal** (menu Iniciar → digite *Terminal*) e cole, de uma vez:
+
+   ```powershell
+   py -m pip install --user --upgrade "https://github.com/fernandofreitascruzdealmeidaal-glitch/aurora/archive/refs/heads/main.zip#subdirectory=servidor"; py -m aurora.atalho
+   ```
+
+3. Pronto: a Aurora abre, e passa a existir o atalho **Aurora** no menu Iniciar e na Área de
+   Trabalho. Para atualizar no futuro, cole o mesmo comando de novo.
+
+## Aurora no computador (Windows) — instalador
 
 Baixe o instalador na página de versões (Releases) do repositório:
 **https://github.com/fernandofreitascruzdealmeidaal-glitch/aurora/releases** → a versão
