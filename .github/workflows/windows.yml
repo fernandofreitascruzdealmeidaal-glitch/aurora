@@ -55,6 +55,23 @@ jobs:
       - name: Ligar a Aurora pelo Python e conferir
         run: python -m aurora.desktop --verificar --porta 18910 --so-neste-computador --pasta "${{ runner.temp }}\aurora-py"
 
+      - name: Abrir um atalho de verdade (pelo Windows) e ver a Aurora ligar
+        shell: pwsh
+        run: |
+          # Mesmo formato de atalho, com --verificar para o teste terminar sozinho.
+          $pasta = Join-Path $env:RUNNER_TEMP "aurora-atalho"
+          $lnk = Join-Path $env:RUNNER_TEMP "AuroraTeste.lnk"
+          python -c "import sys; from pathlib import Path; from aurora import atalho; Path(sys.argv[1]).write_bytes(atalho.montar_lnk(str(atalho.pythonw()), '-m aurora.desktop --verificar --porta 18912 --so-neste-computador --pasta ' + sys.argv[2], sys.argv[3], str(atalho.ICONE), 'teste'))" $lnk $pasta $env:RUNNER_TEMP
+          Start-Process -FilePath $lnk
+          $log = Join-Path $pasta "aurora.log"
+          for ($i = 0; $i -lt 60; $i++) {
+            Start-Sleep -Seconds 1
+            if ((Test-Path $log) -and (Select-String -Path $log -Pattern "Finished server process" -Quiet)) { break }
+          }
+          if (-not (Test-Path (Join-Path $pasta "aurora.db"))) { Write-Error "O atalho não ligou a Aurora"; exit 1 }
+          Get-Content $log | Select-Object -Last 5
+          Write-Host "O atalho abriu a Aurora pelo Python."
+
   instalador:
     name: Instalador Windows
     runs-on: windows-latest
