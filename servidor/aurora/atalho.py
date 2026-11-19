@@ -8,141 +8,40 @@ programas novos sem assinatura digital paga (como o instalador da Aurora). O Pyt
 é assinado, então a Aurora roda por meio dele: o atalho aponta para o `pythonw.exe` do seu
 computador com `-m aurora.desktop`.
 
-O arquivo .lnk é escrito direto no formato da Microsoft (MS-SHLLINK), sem PowerShell nem
-bibliotecas extras — o PowerShell costuma ficar restrito quando essa proteção está ligada.
+Quem cria o atalho é o próprio Windows (componente WScript.Shell), chamado direto do Python
+pela biblioteca `comtypes` — sem PowerShell, que costuma ficar restrito com essa proteção.
 """
 
 from __future__ import annotations
 
 import argparse
 import os
-import struct
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 ARGUMENTOS = "-m aurora.desktop"
 DESCRICAO = "Aurora — sustentabilidade em Minas Gerais"
 ICONE = Path(__file__).parent / "static" / "icones" / "aurora.ico"
 
-# CLSID fixo dos atalhos do Windows: 00021401-0000-0000-C000-000000000046
-_CLSID_ATALHO = bytes.fromhex("0114020000000000c000000000000046")
-_TEM_LINK_INFO = 0x02
-_TEM_NOME = 0x04
-_TEM_PASTA_TRABALHO = 0x10
-_TEM_ARGUMENTOS = 0x20
-_TEM_ICONE = 0x40
-_UNICODE = 0x80
-_TEM_CAMINHO_EXPANDIVEL = 0x200  # EnvironmentVariableDataBlock: o Windows lê o destino daqui
-_ARQUIVO_NORMAL = 0x80
-_MOSTRAR_NORMAL = 1
+# Função que grava um atalho: (destino, programa, argumentos, pasta, ícone, descrição) -> None
+Gravador = Callable[[Path, str, str, str, str, str], None]
 
 
-def _texto_unicode(s: str) -> bytes:
-    """StringData: quantidade de caracteres (2 bytes) + UTF-16LE, sem terminador."""
-    codificado = s.encode("utf-16-le")
-    return struct.pack("<H", len(codificado) // 2) + codificado
+def gravar_com_windows(
+    destino: Path, alvo: str, argumentos: str, pasta: str, icone: str, descricao: str
+) -> None:  # pragma: no cover — só existe no Windows (testado no GitHub Actions)
+    import comtypes.client
 
-
-def montar_lnk(alvo: str, argumentos: str, pasta: str, icone: str, descricao: str) -> bytes:
-    """Monta um atalho .lnk mínimo e válido (cabeçalho + LinkInfo + textos)."""
-    flags = (
-        _TEM_LINK_INFO
-        | _TEM_NOME
-        | _TEM_PASTA_TRABALHO
-        | _TEM_ARGUMENTOS
-        | _TEM_ICONE
-        | _UNICODE
-        | _TEM_CAMINHO_EXPANDIVEL
-    )
-    cabecalho = struct.pack(
-        "<I16sII8s8s8sIiIHHII",
-        0x4C,  # tamanho do cabeçalho
-        _CLSID_ATALHO,
-        flags,
-        _ARQUIVO_NORMAL,
-        b"\0" * 8,  # datas: zero = desconhecida
-        b"\0" * 8,
-        b"\0" * 8,
-        0,  # tamanho do arquivo de destino (desconhecido)
-        0,  # índice do ícone
-        _MOSTRAR_NORMAL,
-        0,  # tecla de atalho
-        0,
-        0,
-        0,
-    )
-
-    # LinkInfo com o caminho local em ANSI e também em Unicode (cabeçalho de 0x24 bytes),
-    # para funcionar mesmo com acentos no nome de usuário.
-    caminho_ansi = alvo.encode("mbcs" if sys.platform == "win32" else "latin-1", "replace")
-    volume = struct.pack("<IIII", 0x11, 3, 0, 0x10) + b"\0"  # unidade fixa, sem rótulo
-    cab_info = 0x24
-    pos_volume = cab_info
-    pos_base = pos_volume + len(volume)
-    pos_sufixo = pos_base + len(caminho_ansi) + 1
-    pos_base_u = pos_sufixo + 1
-    pos_sufixo_u = pos_base_u + len(alvo.encode("utf-16-le")) + 2
-    corpo = (
-        volume
-        + caminho_ansi
-        + b"\0"
-        + b"\0"  # sufixo comum vazio (ANSI)
-        + alvo.encode("utf-16-le")
-        + b"\0\0"
-        + b"\0\0"  # sufixo comum vazio (Unicode)
-    )
-    tamanho_info = cab_info + len(corpo)
-    link_info = (
-        struct.pack(
-            "<IIIIIIIII",
-            tamanho_info,
-            cab_info,
-            0x1,  # VolumeIDAndLocalBasePath
-            pos_volume,
-            pos_base,
-            0,  # sem caminho de rede
-            pos_sufixo,
-            pos_base_u,
-            pos_sufixo_u,
-        )
-        + corpo
-    )
-
-    textos = (
-        _texto_unicode(descricao)
-        + _texto_unicode(pasta)
-        + _texto_unicode(argumentos)
-        + _texto_unicode(icone)
-    )
-    # Bloco extra com o caminho completo do programa (ANSI 260 bytes + Unicode 520 bytes).
-    if len(alvo) >= 260:
-        raise ValueError("caminho do Python longo demais para um atalho")
-    ansi = caminho_ansi[:259].ljust(260, b"\0")
-    uni = alvo.encode("utf-16-le").ljust(520, b"\0")
-    bloco_caminho = struct.pack("<II", 0x314, 0xA0000001) + ansi + uni
-    return cabecalho + link_info + textos + bloco_caminho + b"\0\0\0\0"
-
-
-def ler_lnk(dados: bytes) -> dict[str, str]:
-    """Lê de volta os textos de um .lnk gerado por montar_lnk (usado nos testes)."""
-    if dados[:4] != struct.pack("<I", 0x4C) or dados[4:20] != _CLSID_ATALHO:
-        raise ValueError("não é um atalho do Windows")
-    pos = 0x4C
-    (tamanho_info,) = struct.unpack_from("<I", dados, pos)
-    pos_base_u = struct.unpack_from("<I", dados, pos + 28)[0]
-    inicio_u = pos + pos_base_u
-    fim_u = inicio_u
-    while dados[fim_u : fim_u + 2] != b"\0\0":
-        fim_u += 2
-    alvo = dados[inicio_u:fim_u].decode("utf-16-le")
-    pos += tamanho_info
-    campos = {}
-    for nome in ("descricao", "pasta", "argumentos", "icone"):
-        (n,) = struct.unpack_from("<H", dados, pos)
-        campos[nome] = dados[pos + 2 : pos + 2 + 2 * n].decode("utf-16-le")
-        pos += 2 + 2 * n
-    return {"alvo": alvo, **campos}
+    shell = comtypes.client.CreateObject("WScript.Shell", dynamic=True)
+    atalho = shell.CreateShortcut(str(destino))
+    atalho.TargetPath = alvo
+    atalho.Arguments = argumentos
+    atalho.WorkingDirectory = pasta
+    atalho.IconLocation = f"{icone},0"
+    atalho.Description = descricao
+    atalho.Save()
 
 
 def pythonw() -> Path:
@@ -156,7 +55,7 @@ def _pasta_conhecida(guid: str, reserva: Path) -> Path:
     """Pergunta ao Windows onde fica a pasta (a Área de Trabalho pode estar no OneDrive)."""
     if sys.platform != "win32":
         return reserva
-    import ctypes
+    import ctypes  # pragma: no cover — só no Windows
     import uuid
     from ctypes import wintypes
 
@@ -196,22 +95,19 @@ def destinos() -> list[Path]:
     return [menu / "Aurora.lnk", area / "Aurora.lnk"]
 
 
-def criar_atalhos(lista: list[Path] | None = None) -> list[Path]:
-    alvo = str(pythonw())
-    dados = montar_lnk(
-        alvo=alvo,
-        argumentos=ARGUMENTOS,
-        pasta=str(Path.home()),
-        icone=str(ICONE),
-        descricao=DESCRICAO,
-    )
+def criar_atalhos(
+    lista: list[Path] | None = None,
+    argumentos: str = ARGUMENTOS,
+    gravador: Gravador | None = None,
+) -> list[Path]:
+    gravar = gravador or gravar_com_windows
     criados = []
     for destino in lista or destinos():
         try:
             destino.parent.mkdir(parents=True, exist_ok=True)
-            destino.write_bytes(dados)
+            gravar(destino, str(pythonw()), argumentos, str(Path.home()), str(ICONE), DESCRICAO)
             criados.append(destino)
-        except OSError as exc:
+        except Exception as exc:
             print(f"Não consegui criar {destino}: {exc}", file=sys.stderr)
     return criados
 
@@ -226,21 +122,22 @@ def abrir_aurora() -> None:  # pragma: no cover — abre a janela de verdade
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(prog="aurora.atalho", description=__doc__.splitlines()[0])
+    p = argparse.ArgumentParser(prog="aurora.atalho", description="Cria os atalhos da Aurora.")
     p.add_argument("--sem-abrir", action="store_true", help="só cria os atalhos")
     args = p.parse_args(argv)
     if sys.platform != "win32":
         print("Os atalhos são para Windows. Para abrir a Aurora: python -m aurora.desktop")
         return 0
-    criados = criar_atalhos()
-    for c in criados:
+    criados = criar_atalhos()  # pragma: no cover — Windows
+    for c in criados:  # pragma: no cover
         print(f"Atalho criado: {c}")
-    if not criados:
+    if not criados:  # pragma: no cover
+        print("Não deu para criar os atalhos. Abra a Aurora com: py -m aurora.desktop")
         return 1
     if not args.sem_abrir:  # pragma: no cover
         print("Abrindo a Aurora…")
         abrir_aurora()
-    return 0
+    return 0  # pragma: no cover
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -12,6 +12,7 @@ dependencies = [
     "uvicorn>=0.29",
     "tzdata>=2024.1",  # fusos horários no Windows (zoneinfo precisa dele lá)
     "defusedxml>=0.7",  # leitura segura dos feeds de notícias
+    "comtypes>=1.4; sys_platform == 'win32'",  # criar atalhos no Windows (Python puro)
 ]
 
 [project.optional-dependencies]

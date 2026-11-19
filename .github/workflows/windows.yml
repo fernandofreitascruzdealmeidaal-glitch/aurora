@@ -61,7 +61,7 @@ jobs:
           # Mesmo formato de atalho, com --verificar para o teste terminar sozinho.
           $pasta = Join-Path $env:RUNNER_TEMP "aurora-atalho"
           $lnk = Join-Path $env:RUNNER_TEMP "AuroraTeste.lnk"
-          python -c "import sys; from pathlib import Path; from aurora import atalho; Path(sys.argv[1]).write_bytes(atalho.montar_lnk(str(atalho.pythonw()), '-m aurora.desktop --verificar --porta 18912 --so-neste-computador --pasta ' + sys.argv[2], sys.argv[3], str(atalho.ICONE), 'teste'))" $lnk $pasta $env:RUNNER_TEMP
+          python -c "import sys; from pathlib import Path; from aurora import atalho; atalho.criar_atalhos([Path(sys.argv[1])], '-m aurora.desktop --verificar --porta 18912 --so-neste-computador --pasta ' + sys.argv[2]) or sys.exit(1)" $lnk $pasta
           Start-Process -FilePath $lnk
           $log = Join-Path $pasta "aurora.log"
           for ($i = 0; $i -lt 60; $i++) {
