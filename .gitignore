@@ -24,3 +24,7 @@ android/build/
 android/app/build/
 android/local.properties
 *.apk
+
+# Gerados pela instalação do Python
+build/
+dist/
