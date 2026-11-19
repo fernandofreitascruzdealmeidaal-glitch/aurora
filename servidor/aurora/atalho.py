@@ -33,6 +33,7 @@ _TEM_PASTA_TRABALHO = 0x10
 _TEM_ARGUMENTOS = 0x20
 _TEM_ICONE = 0x40
 _UNICODE = 0x80
+_TEM_CAMINHO_EXPANDIVEL = 0x200  # EnvironmentVariableDataBlock: o Windows lê o destino daqui
 _ARQUIVO_NORMAL = 0x80
 _MOSTRAR_NORMAL = 1
 
@@ -46,7 +47,13 @@ def _texto_unicode(s: str) -> bytes:
 def montar_lnk(alvo: str, argumentos: str, pasta: str, icone: str, descricao: str) -> bytes:
     """Monta um atalho .lnk mínimo e válido (cabeçalho + LinkInfo + textos)."""
     flags = (
-        _TEM_LINK_INFO | _TEM_NOME | _TEM_PASTA_TRABALHO | _TEM_ARGUMENTOS | _TEM_ICONE | _UNICODE
+        _TEM_LINK_INFO
+        | _TEM_NOME
+        | _TEM_PASTA_TRABALHO
+        | _TEM_ARGUMENTOS
+        | _TEM_ICONE
+        | _UNICODE
+        | _TEM_CAMINHO_EXPANDIVEL
     )
     cabecalho = struct.pack(
         "<I16sII8s8s8sIiIHHII",
@@ -108,7 +115,13 @@ def montar_lnk(alvo: str, argumentos: str, pasta: str, icone: str, descricao: st
         + _texto_unicode(argumentos)
         + _texto_unicode(icone)
     )
-    return cabecalho + link_info + textos + b"\0\0\0\0"
+    # Bloco extra com o caminho completo do programa (ANSI 260 bytes + Unicode 520 bytes).
+    if len(alvo) >= 260:
+        raise ValueError("caminho do Python longo demais para um atalho")
+    ansi = caminho_ansi[:259].ljust(260, b"\0")
+    uni = alvo.encode("utf-16-le").ljust(520, b"\0")
+    bloco_caminho = struct.pack("<II", 0x314, 0xA0000001) + ansi + uni
+    return cabecalho + link_info + textos + bloco_caminho + b"\0\0\0\0"
 
 
 def ler_lnk(dados: bytes) -> dict[str, str]:
