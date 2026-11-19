@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1f6b45">
+  <link rel="icon" type="image/png" href="/static/icones/favicon-48.png">
+  <meta name="robots" content="noindex">
+  <title>Aurora — área da equipe</title>
+  <link rel="stylesheet" href="/static/site.css">
+  <script src="/static/equipe.js" defer></script>
+</head>
+<body>
+  <header class="topo">
+    <div class="topo-dentro topo-simples">
+      <div class="marca">
+        <span class="sol" aria-hidden="true"></span>
+        <div><h1>Aurora — equipe</h1><p>Aprovar notícias, cadastrar eventos e cuidar das fontes</p></div>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div id="erro" class="erro" role="alert" hidden></div>
+
+    <form id="entrar" class="painel" hidden>
+      <label for="token">Token da equipe</label>
+      <div class="filtros sem-moldura">
+        <input id="token" type="password" autocomplete="current-password" required minlength="16">
+        <button class="botao-principal" type="submit">Entrar</button>
+      </div>
+    </form>
+
+    <div id="area" hidden>
+      <p><a href="/">← Ver o site</a> · <button id="sair" type="button">Sair</button></p>
+
+      <h2>Aguardando aprovação <span id="n-pendentes"></span></h2>
+      <p class="aviso-curadoria">Antes de aprovar: o link abre? É sobre sustentabilidade? É confiável? A região está certa?</p>
+      <div id="pendentes"></div>
+
+      <h2>Cadastrar evento, feira ou oportunidade</h2>
+      <form id="novo" class="painel form-item">
+        <label>Tipo<select name="tipo" required></select></label>
+        <label class="largo">Título<input name="titulo" required minlength="3" maxlength="200"></label>
+        <label class="largo">Resumo (com as suas palavras)<textarea name="resumo" rows="3" maxlength="1200"></textarea></label>
+        <label class="largo">Link da fonte oficial<input name="url" type="url" placeholder="https://"></label>
+        <label>Quem organiza<input name="instituicao" maxlength="120"></label>
+        <label>Fonte<input name="fonte" maxlength="120" placeholder="ex.: Prefeitura de BH"></label>
+        <label>Cidade<input name="cidade" maxlength="80"></label>
+        <label>Região<select name="regiao"></select></label>
+        <label>Local<input name="local" maxlength="160"></label>
+        <label>Para quem<input name="publico" maxlength="160" placeholder="ex.: estudantes do fundamental"></label>
+        <label>Início<input name="inicio" type="date"></label>
+        <label>Fim<input name="fim" type="date"></label>
+        <label>Repete?<input name="recorrencia" maxlength="120" placeholder="ex.: anual, em outubro"></label>
+        <label><span><input name="data_confirmada" type="checkbox" checked> Data confirmada</span></label>
+        <label><span><input name="gratuito" type="checkbox"> Gratuito</span></label>
+        <div class="largo"><button class="botao-principal" type="submit">Publicar</button> <span id="novo-ok" class="ok"></span></div>
+      </form>
+
+      <h2>Fontes de notícias (RSS)</h2>
+      <div class="acoes"><button id="coletar" type="button" class="botao-principal">Coletar agora</button> <span id="coleta-ok" class="ok"></span></div>
+      <div id="fontes"></div>
+      <form id="nova-fonte" class="painel form-item espaco-acima">
+        <label>Nome<input name="nome" required minlength="2" maxlength="120"></label>
+        <label class="largo">Endereço do feed RSS/Atom<input name="url" type="url" required placeholder="https://…/feed"></label>
+        <label>Região padrão<select name="regiao_padrao"></select></label>
+        <div class="largo acoes">
+          <button type="button" id="testar">Testar</button>
+          <button class="botao-principal" type="submit">Cadastrar fonte</button>
+          <span id="teste-resultado"></span>
+        </div>
+      </form>
+
+      <h2>Publicados recentemente</h2>
+      <div id="aprovados"></div>
+    </div>
+  </main>
+</body>
+</html>

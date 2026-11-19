@@ -1,0 +1,56 @@
+// App Android da Aurora: uma "janela" (WebView) para o servidor da Aurora.
+// Compilado pelo GitHub Actions (.github/workflows/android.yml).
+plugins {
+    id 'com.android.application'
+}
+
+def servidorPadrao = (project.findProperty('auroraServidor') ?: '').toString().trim()
+
+android {
+    namespace 'br.aurora.sustentabilidade'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'br.aurora.sustentabilidade'
+        minSdk 24
+        targetSdk 34
+        versionCode((System.getenv('VERSAO_CODIGO') ?: '1').toInteger())
+        versionName '0.2.0'
+        // Se o servidor tiver endereço fixo (ex.: https://aurora.suaescola.org), o app já abre nele.
+        buildConfigField 'String', 'SERVIDOR_PADRAO', "\"${servidorPadrao}\""
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    signingConfigs {
+        aurora {
+            // Sem segredo configurado no GitHub, usa a chave de desenvolvimento do repositório.
+            storeFile file(System.getenv('AURORA_KEYSTORE') ?: '../aurora-desenvolvimento.keystore')
+            storePassword System.getenv('AURORA_KEYSTORE_SENHA') ?: 'aurora-dev'
+            keyAlias System.getenv('AURORA_CHAVE_ALIAS') ?: 'aurora'
+            keyPassword System.getenv('AURORA_CHAVE_SENHA') ?: 'aurora-dev'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.aurora
+        }
+        debug {
+            signingConfig signingConfigs.aurora
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}

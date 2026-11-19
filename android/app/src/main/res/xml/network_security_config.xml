@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O servidor da escola costuma rodar na rede local sem HTTPS (ex.: http://192.168.0.10:8000).
+     Por isso o app aceita HTTP. Se o servidor ganhar HTTPS, o app usa HTTPS normalmente. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

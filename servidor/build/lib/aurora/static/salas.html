@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aurora — ar das salas de aula</title>
+  <link rel="stylesheet" href="/static/painel.css">
+  <script src="/static/painel.js" defer></script>
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">
+      <span class="logo" aria-hidden="true"></span>
+      <div>
+        <h1>Aurora</h1>
+        <p>Temperatura, umidade e CO₂ das salas de aula</p>
+      </div>
+    </div>
+    <div class="estado-geral">
+      <a href="/">← Base de sustentabilidade</a>
+      <span id="atualizado">Carregando…</span>
+      <button id="btn-atualizar" type="button">Atualizar</button>
+    </div>
+  </header>
+
+  <div id="erro" class="erro" role="alert" hidden></div>
+
+  <form id="form-token" class="cartao token" hidden>
+    <label for="campo-token">Este painel está protegido. Digite o token de acesso:</label>
+    <div class="linha">
+      <input id="campo-token" type="password" autocomplete="current-password" required>
+      <button type="submit">Entrar</button>
+    </div>
+  </form>
+
+  <main>
+    <section aria-labelledby="titulo-salas">
+      <h2 id="titulo-salas">Salas agora</h2>
+      <div id="salas" class="grade-salas"></div>
+      <p id="sem-salas" class="vazio" hidden>
+        Nenhum sensor cadastrado ainda. No terminal: <code>aurora novo-dispositivo sala-101 "Sala 101"</code>
+      </p>
+    </section>
+
+    <section id="detalhe" aria-labelledby="titulo-detalhe" hidden>
+      <div class="cabecalho-detalhe">
+        <h2 id="titulo-detalhe">Histórico</h2>
+        <div class="controles">
+          <label for="periodo">Período</label>
+          <select id="periodo">
+            <option value="6">6 horas</option>
+            <option value="24" selected>24 horas</option>
+            <option value="72">3 dias</option>
+            <option value="168">7 dias</option>
+            <option value="720">30 dias</option>
+          </select>
+          <button id="btn-csv" type="button">Baixar planilha (CSV)</button>
+        </div>
+      </div>
+
+      <div id="resumo" class="grade-resumo"></div>
+
+      <div class="grade-graficos">
+        <figure class="cartao grafico">
+          <figcaption>CO₂ (ppm)</figcaption>
+          <canvas id="g-co2_ppm" height="220" role="img" aria-label="Gráfico de CO₂"></canvas>
+        </figure>
+        <figure class="cartao grafico">
+          <figcaption>Temperatura (°C)</figcaption>
+          <canvas id="g-temperatura_c" height="220" role="img" aria-label="Gráfico de temperatura"></canvas>
+        </figure>
+        <figure class="cartao grafico">
+          <figcaption>Umidade (%)</figcaption>
+          <canvas id="g-umidade_pct" height="220" role="img" aria-label="Gráfico de umidade"></canvas>
+        </figure>
+        <figure class="cartao grafico">
+          <figcaption>Padrão do dia — CO₂ médio por hora (últimos 7 dias)</figcaption>
+          <canvas id="g-padrao" height="220" role="img" aria-label="CO₂ médio por hora do dia"></canvas>
+        </figure>
+      </div>
+      <p class="legenda-grafico">
+        Linha cheia: média. Faixa clara: mínimo e máximo. Linhas tracejadas: referências de atenção
+        (amarelo) e crítica (vermelho).
+      </p>
+    </section>
+  </main>
+
+  <footer id="aviso" class="rodape"></footer>
+</body>
+</html>

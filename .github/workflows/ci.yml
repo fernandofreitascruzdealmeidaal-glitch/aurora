@@ -1,0 +1,76 @@
+# Integração contínua: a cada envio de código para o GitHub, tudo é testado sozinho.
+# Se algo quebrar, o GitHub mostra um X vermelho antes de o erro chegar à escola.
+name: Verificação
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  servidor:
+    name: Servidor (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e "servidor[dev]"
+      - name: Estilo e segurança (ruff)
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Testes com cobertura mínima de 90%
+        working-directory: servidor
+        run: pytest --cov
+
+  instalacao:
+    name: Instalação do zero (como na escola)
+    runs-on: ${{ matrix.so }}
+    strategy:
+      fail-fast: false
+      matrix:
+        so: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ./servidor
+      - name: Carregar conteúdo e conferir
+        env:
+          AURORA_BANCO: teste-instalacao.db
+        run: |
+          aurora importar-semente
+          aurora dispositivos
+
+  firmware-testes:
+    name: Firmware — testes no computador
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./firmware/teste_nativo/rodar.sh
+
+  firmware-esp32:
+    name: Firmware — compilação para ESP32
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ hashFiles('firmware/platformio.ini') }}
+      - run: pip install platformio
+      - name: Compilar (modo simulado e com o sensor real)
+        working-directory: firmware
+        run: pio run -e simulado -e verificar-sensor

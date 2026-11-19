@@ -1,0 +1,14 @@
+# Regras de estilo e segurança do código Python (servidor e simulador)
+line-length = 100
+target-version = "py310"
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]  # acentos e símbolos (°, ₂) nos textos em português
+
+[lint.per-file-ignores]
+"servidor/tests/*" = ["S"]
+"simulador/*" = ["S311"]  # números aleatórios para simular dados, não para criptografia
+
+[lint.isort]
+known-first-party = ["aurora", "tests"]

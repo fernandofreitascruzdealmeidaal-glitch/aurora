@@ -1,0 +1,26 @@
+# Segredos — NUNCA vão para o Git
+firmware/include/config.h
+.env
+
+# Banco de dados (dados reais das salas)
+*.db
+*.db-wal
+*.db-shm
+
+# Gerados automaticamente
+__pycache__/
+*.egg-info/
+.venv/
+.coverage
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+firmware/.pio/
+firmware/teste_nativo/.libs/
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.apk

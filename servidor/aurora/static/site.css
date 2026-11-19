@@ -1,0 +1,187 @@
+/* Aurora — base de sustentabilidade de Minas Gerais. Sem bibliotecas externas. */
+:root {
+  --fundo: #f6f4ee;
+  --cartao: #ffffff;
+  --texto: #1d2a22;
+  --suave: #5c6b61;
+  --borda: #e2ded2;
+  --verde: #1f6b45;
+  --verde-claro: #e3f0e7;
+  --sol: #e6a23c;
+  --ceu: #2f6fae;
+  --alerta: #b7791f;
+  --raio: 14px;
+  --sombra: 0 1px 2px rgba(29, 42, 34, 0.06), 0 4px 16px rgba(29, 42, 34, 0.05);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fundo: #111814;
+    --cartao: #19221c;
+    --texto: #e7efe9;
+    --suave: #9fb0a5;
+    --borda: #2a362e;
+    --verde: #5fc28f;
+    --verde-claro: #1f3327;
+    --sol: #f0b75a;
+    --ceu: #7fb2e6;
+    --alerta: #e3a740;
+    --sombra: none;
+  }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fundo); color: var(--texto); line-height: 1.5; }
+a { color: var(--verde); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid var(--ceu); outline-offset: 2px;
+}
+.pular { position: absolute; left: -999px; }
+.pular:focus { left: 12px; top: 12px; background: var(--cartao); padding: 8px 12px; z-index: 10; }
+
+/* topo */
+.topo { background: var(--verde); color: #fff; }
+@media (prefers-color-scheme: dark) { .topo { background: #143322; } }
+.topo-dentro { max-width: 1180px; margin: 0 auto; padding: 18px 20px 0; }
+.marca { display: flex; align-items: center; gap: 12px; }
+.marca .sol {
+  width: 44px; height: 44px; border-radius: 11px; flex: none;
+  background: url("/static/icones/icone-192.png") center / cover;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+.marca h1 { margin: 0; font-size: 1.55rem; letter-spacing: 0.01em; }
+.marca p { margin: 0; opacity: 0.85; font-size: 0.95rem; }
+.abas { display: flex; gap: 4px; overflow-x: auto; margin-top: 14px; scrollbar-width: none; }
+.abas a {
+  color: #fff; text-decoration: none; padding: 10px 14px; border-radius: 10px 10px 0 0;
+  white-space: nowrap; opacity: 0.85; font-weight: 550;
+}
+.abas a:hover { opacity: 1; background: rgba(255, 255, 255, 0.08); }
+.abas a[aria-current="page"] { background: var(--fundo); color: var(--texto); opacity: 1; }
+
+main { max-width: 1180px; margin: 0 auto; padding: 22px 20px 48px; }
+h2 { font-size: 1.25rem; margin: 30px 0 12px; }
+h2:first-child { margin-top: 6px; }
+.secao-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.ver-mais { font-size: 0.92rem; }
+
+.erro {
+  border: 1px solid var(--alerta); background: color-mix(in srgb, var(--alerta) 12%, var(--cartao));
+  border-radius: var(--raio); padding: 12px 16px; margin-bottom: 16px;
+}
+.vazio { color: var(--suave); padding: 18px 0; }
+.carregando { color: var(--suave); }
+
+/* destaque da página inicial */
+.destaque {
+  display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px;
+}
+@media (max-width: 820px) { .destaque { grid-template-columns: 1fr; } }
+.painel {
+  background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio);
+  padding: 18px 20px; box-shadow: var(--sombra);
+}
+.dica-dia { background: var(--verde-claro); border-color: transparent; }
+.dica-dia .rotulo { text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.08em; color: var(--verde); font-weight: 700; }
+.dica-dia h3 { margin: 6px 0 6px; font-size: 1.2rem; }
+.dica-dia p { margin: 0; }
+.numeros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+.numero { text-align: center; }
+.numero strong { display: block; font-size: 1.6rem; color: var(--verde); }
+.numero span { font-size: 0.82rem; color: var(--suave); }
+
+/* datas */
+.datas { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.data { display: flex; gap: 12px; align-items: center; }
+.calendario {
+  flex: none; width: 54px; text-align: center; border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--borda); background: var(--cartao);
+}
+.calendario .mes { display: block; background: var(--sol); color: #2a1d05; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; padding: 2px 0; }
+.calendario .dia { display: block; font-size: 1.25rem; font-weight: 700; padding: 2px 0 4px; }
+.data .nome { font-weight: 600; }
+.data .falta { font-size: 0.85rem; color: var(--suave); }
+.data p { margin: 2px 0 0; font-size: 0.9rem; color: var(--suave); }
+
+/* filtros */
+.filtros {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio); padding: 12px;
+  margin-bottom: 16px;
+}
+.filtros input[type="search"] { flex: 1 1 220px; }
+input, select, button, textarea {
+  font: inherit; color: var(--texto); background: var(--cartao); border: 1px solid var(--borda);
+  border-radius: 10px; padding: 8px 12px;
+}
+button { cursor: pointer; }
+button:hover { border-color: var(--verde); }
+.botao-principal { background: var(--verde); color: #fff; border-color: var(--verde); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border-radius: 999px; padding: 6px 12px; font-size: 0.88rem; }
+.chip[aria-pressed="true"] { background: var(--verde); border-color: var(--verde); color: #fff; }
+
+/* cartões de itens */
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.item {
+  background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio);
+  padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--sombra);
+}
+.item h3 { margin: 0; font-size: 1.05rem; line-height: 1.35; }
+.item h3 a { color: inherit; text-decoration: none; }
+.item h3 a:hover { text-decoration: underline; color: var(--verde); }
+.item .resumo { margin: 0; color: var(--texto); font-size: 0.94rem; }
+.etiquetas { display: flex; flex-wrap: wrap; gap: 6px; }
+.etiqueta {
+  font-size: 0.76rem; font-weight: 650; padding: 2px 9px; border-radius: 999px;
+  background: var(--verde-claro); color: var(--verde);
+}
+.etiqueta.gratis { background: color-mix(in srgb, var(--ceu) 15%, var(--cartao)); color: var(--ceu); }
+.etiqueta.previsto { background: color-mix(in srgb, var(--sol) 22%, var(--cartao)); color: var(--alerta); }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.86rem; color: var(--suave); }
+.meta span::before { margin-right: 4px; }
+.meta .quando::before { content: "📅"; }
+.meta .onde::before { content: "📍"; }
+.meta .quem::before { content: "🏛️"; }
+.meta .para::before { content: "👥"; }
+.rodape-item { margin-top: auto; font-size: 0.8rem; color: var(--suave); border-top: 1px dashed var(--borda); padding-top: 8px; }
+
+.paginacao { display: flex; justify-content: center; gap: 10px; margin-top: 18px; align-items: center; }
+
+/* dicas */
+.dicas { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.dica h3 { margin: 0 0 6px; font-size: 1rem; }
+.dica p { margin: 0; font-size: 0.94rem; }
+
+.aviso-curadoria { font-size: 0.88rem; color: var(--suave); }
+.rodape { max-width: 1180px; margin: 0 auto; padding: 20px; border-top: 1px solid var(--borda); color: var(--suave); font-size: 0.86rem; }
+
+/* área da equipe */
+.tabela { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.tabela th, .tabela td { text-align: left; padding: 8px; border-bottom: 1px solid var(--borda); vertical-align: top; }
+.acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+.form-item { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.form-item label { display: flex; flex-direction: column; gap: 4px; font-size: 0.88rem; color: var(--suave); }
+.form-item .largo { grid-column: 1 / -1; }
+.ok { color: var(--verde); }
+.topo-simples { padding-bottom: 14px; }
+.filtros.sem-moldura { border: 0; padding: 8px 0 0; background: none; }
+.espaco-acima { margin-top: 12px; }
+section.painel + section.painel { margin-top: 12px; }
+
+/* app instalável */
+.marca-texto { flex: 1; }
+.botao-instalar {
+  flex: none; background: #fff; color: var(--verde); border: 0; font-weight: 700;
+  border-radius: 999px; padding: 8px 16px;
+}
+@media (prefers-color-scheme: dark) { .botao-instalar { background: var(--verde-claro); color: #fff; } }
+.dica-iphone { margin: 10px 0 0; font-size: 0.88rem; opacity: 0.9; }
+.aviso-offline {
+  border-radius: var(--raio); padding: 10px 14px; margin-bottom: 14px;
+  background: color-mix(in srgb, var(--ceu) 14%, var(--cartao)); border: 1px solid var(--ceu);
+}
+@media (display-mode: standalone) {
+  .topo-dentro { padding-top: max(18px, env(safe-area-inset-top)); }
+}

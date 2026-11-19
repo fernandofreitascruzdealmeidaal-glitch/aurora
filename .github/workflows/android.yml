@@ -1,0 +1,82 @@
+# Compila o app Android (APK) e publica para download.
+# Link fixo para baixar a versão mais nova:
+#   https://github.com/<dono>/<repositório>/releases/latest/download/aurora.apk
+name: App Android
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "android/**"
+      - ".github/workflows/android.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write  # para publicar o APK na página de versões (Releases)
+
+concurrency:
+  group: android
+  cancel-in-progress: false
+
+jobs:
+  apk:
+    name: Compilar APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      # Opcional: com os segredos AURORA_KEYSTORE_B64 e AURORA_KEYSTORE_SENHA configurados no
+      # GitHub, o APK é assinado com a chave oficial. Sem eles, usa a chave de desenvolvimento.
+      - name: Chave de assinatura
+        env:
+          KEYSTORE_B64: ${{ secrets.AURORA_KEYSTORE_B64 }}
+          KEYSTORE_SENHA: ${{ secrets.AURORA_KEYSTORE_SENHA }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/aurora.keystore"
+            {
+              echo "AURORA_KEYSTORE=$RUNNER_TEMP/aurora.keystore"
+              echo "AURORA_KEYSTORE_SENHA=$KEYSTORE_SENHA"
+              echo "AURORA_CHAVE_SENHA=$KEYSTORE_SENHA"
+            } >> "$GITHUB_ENV"
+            echo "Usando a chave oficial."
+          else
+            echo "Usando a chave de desenvolvimento do repositório."
+          fi
+
+      - name: Compilar
+        working-directory: android
+        env:
+          VERSAO_CODIGO: ${{ github.run_number }}
+        # A variável AURORA_SERVIDOR (Settings > Variables) define o endereço padrão do app.
+        run: gradle --no-daemon assembleRelease -PauroraServidor="${{ vars.AURORA_SERVIDOR }}"
+
+      - name: Renomear
+        run: cp android/app/build/outputs/apk/release/app-release.apk aurora.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aurora-apk
+          path: aurora.apk
+
+      - name: Publicar versão
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-v0.2.${{ github.run_number }}
+          name: Aurora para Android (0.2.${{ github.run_number }})
+          body: |
+            Baixe **aurora.apk** no celular Android e abra o arquivo para instalar
+            (pode ser preciso permitir "instalar apps de fontes desconhecidas").
+            Na primeira abertura, o app pede o endereço do servidor da Aurora.
+          files: aurora.apk
+          make_latest: true
