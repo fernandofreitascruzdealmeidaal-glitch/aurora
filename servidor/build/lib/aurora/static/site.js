@@ -50,6 +50,7 @@
     const relogio = setTimeout(() => controle.abort(), 15000);
     try {
       const r = await fetch(caminho, { signal: controle.signal });
+      $("aviso-offline").hidden = r.headers.get("X-Aurora-Offline") !== "1";
       if (!r.ok) {
         let msg = `Erro ${r.status}`;
         try { const j = await r.json(); if (typeof j.detail === "string") msg = j.detail; } catch { /* sem JSON */ }
@@ -280,7 +281,39 @@
     }
   }
 
+  // ------------------------------------------------------------ app instalável
+
+  function prepararApp() {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch((e) => console.warn("Sem modo offline:", e));
+    }
+    const instalado = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+    let pedidoInstalacao = null;
+    window.addEventListener("beforeinstallprompt", (ev) => {
+      ev.preventDefault();
+      pedidoInstalacao = ev;
+      $("instalar").hidden = false;
+    });
+    $("instalar").addEventListener("click", async () => {
+      if (!pedidoInstalacao) return;
+      pedidoInstalacao.prompt();
+      await pedidoInstalacao.userChoice.catch(() => null);
+      pedidoInstalacao = null;
+      $("instalar").hidden = true;
+    });
+    window.addEventListener("appinstalled", () => { $("instalar").hidden = true; });
+    const iphone = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (iphone && !instalado) $("dica-iphone").hidden = false;
+    window.addEventListener("online", () => { $("aviso-offline").hidden = true; navegar(); });
+    // Dentro do app Android, a ponte AuroraApp permite trocar o endereço do servidor.
+    if (window.AuroraApp && typeof window.AuroraApp.trocarServidor === "function") {
+      $("app-android").hidden = false;
+      $("trocar-servidor").addEventListener("click", () => window.AuroraApp.trocarServidor());
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
+    prepararApp();
     try { catalogo = await api("/api/v1/conteudo/catalogo"); } catch (e) { mostrarErro(e.message); }
     window.addEventListener("hashchange", () => { navegar(); $("conteudo").focus({ preventScroll: true }); });
     navegar();

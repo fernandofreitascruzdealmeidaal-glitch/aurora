@@ -1,5 +1,5 @@
-// Copie este arquivo para "config.h" (na mesma pasta) e preencha os valores.
-// O config.h fica fora do Git (.gitignore) porque contém a senha do Wi-Fi e a chave.
+// Copie este arquivo para "aurora_config.h" (na mesma pasta) e preencha os valores.
+// O aurora_config.h fica fora do Git (.gitignore) porque contém a senha do Wi-Fi e a chave.
 #pragma once
 
 // Rede Wi-Fi da escola (2,4 GHz — o ESP32 não conecta em redes só 5 GHz)

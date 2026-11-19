@@ -17,6 +17,7 @@ import io
 import json
 import logging
 import math
+import mimetypes
 import sqlite3
 import threading
 import time
@@ -42,6 +43,7 @@ from aurora.modelos import LoteEntrada, ResultadoLote
 from aurora.seguranca import token_confere
 
 log = logging.getLogger("aurora")
+mimetypes.add_type("application/manifest+json", ".webmanifest")
 PASTA_ESTATICA = Path(__file__).parent / "static"
 MAX_PONTOS_GRAFICO = 2000
 
@@ -463,6 +465,15 @@ def criar_app(
     @app.get("/", include_in_schema=False)
     def site() -> FileResponse:
         return FileResponse(PASTA_ESTATICA / "index.html")
+
+    @app.get("/sw.js", include_in_schema=False)
+    def service_worker() -> FileResponse:
+        # Na raiz para valer para o site todo; sem cache para atualizações chegarem logo.
+        return FileResponse(
+            PASTA_ESTATICA / "sw.js",
+            media_type="text/javascript",
+            headers={"Cache-Control": "no-cache"},
+        )
 
     @app.get("/salas", include_in_schema=False)
     def painel() -> FileResponse:

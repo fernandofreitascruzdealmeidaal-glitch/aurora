@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Aurora — sustentabilidade em Minas Gerais</title>
   <meta name="description" content="Notícias, eventos, feiras de ciências, voluntariado, cursos e datas ambientais em Minas Gerais.">
+  <meta name="theme-color" content="#1f6b45">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Aurora">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <link rel="icon" type="image/png" href="/static/icones/favicon-48.png">
+  <link rel="apple-touch-icon" href="/static/icones/apple-touch-icon.png">
   <link rel="stylesheet" href="/static/site.css">
   <script src="/static/site.js" defer></script>
 </head>
@@ -14,11 +22,16 @@
     <div class="topo-dentro">
       <div class="marca">
         <span class="sol" aria-hidden="true"></span>
-        <div>
+        <div class="marca-texto">
           <h1>Aurora</h1>
           <p>Sustentabilidade em Minas Gerais: o que acontece, onde participar e como fazer a sua parte</p>
         </div>
+        <button id="instalar" class="botao-instalar" type="button" hidden>Instalar app</button>
       </div>
+      <p id="dica-iphone" class="dica-iphone" hidden>
+        Para instalar no iPhone: toque em <strong>Compartilhar</strong> e depois em
+        <strong>Adicionar à Tela de Início</strong>.
+      </p>
       <nav class="abas" aria-label="Seções">
         <a href="#/inicio" data-rota="inicio">Início</a>
         <a href="#/agenda" data-rota="agenda">Agenda</a>
@@ -33,6 +46,9 @@
   </header>
 
   <main id="conteudo" tabindex="-1">
+    <div id="aviso-offline" class="aviso-offline" role="status" hidden>
+      Você está sem internet. Mostrando a última versão salva no aparelho.
+    </div>
     <div id="erro" class="erro" role="alert" hidden></div>
     <div id="vista"><p class="carregando">Carregando…</p></div>
   </main>
@@ -43,6 +59,7 @@
       link para a fonte original — confira sempre datas e regras no site de quem organiza.
       Datas marcadas como <strong>previsto</strong> seguem o padrão dos anos anteriores e ainda não foram confirmadas.
     </p>
+    <p id="app-android" hidden><button id="trocar-servidor" type="button">Trocar o servidor do app</button></p>
   </footer>
 </body>
 </html>

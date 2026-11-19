@@ -18,12 +18,13 @@
 #include <esp_arduino_version.h>
 #include <esp_task_wdt.h>
 
-#if __has_include("config.h")
-#include "config.h"
+// Nome próprio de propósito: o ESP32 já tem arquivos chamados "config.h" que seriam lidos no lugar.
+#if __has_include("aurora_config.h")
+#include "aurora_config.h"
 #elif defined(AURORA_USAR_EXEMPLO)
-#include "config.example.h"
+#include "aurora_config.example.h"
 #else
-#error "Copie include/config.example.h para include/config.h e preencha Wi-Fi, URL e chave."
+#error "Copie include/aurora_config.example.h para include/aurora_config.h e preencha Wi-Fi, URL e chave."
 #endif
 
 #ifdef AURORA_FORCAR_SIMULACAO
@@ -248,7 +249,7 @@ void enviarLote() {
   http.setConnectTimeout(5000);
   http.setTimeout(TEMPO_HTTP_MS);
   if (!http.begin(AURORA_URL)) {
-    Serial.println("[envio] URL inválida em config.h (AURORA_URL)");
+    Serial.println("[envio] URL inválida em aurora_config.h (AURORA_URL)");
     agendarNovaTentativa(ESPERA_MAX_MS);
     return;
   }

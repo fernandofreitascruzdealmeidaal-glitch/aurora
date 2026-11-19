@@ -181,12 +181,12 @@ Gravando o firmware (com [PlatformIO](https://platformio.org) instalado):
 
 ```bash
 cd firmware
-cp include/config.example.h include/config.h   # preencha Wi-Fi, endereço do servidor e chave
+cp include/aurora_config.example.h include/aurora_config.h   # preencha Wi-Fi, endereço do servidor e chave
 pio run -e esp32dev -t upload
 pio device monitor                              # mostra o que o sensor está fazendo
 ```
 
-Dica: comece com `AURORA_SIMULAR 1` no `config.h` para testar Wi-Fi e servidor antes de ligar o
+Dica: comece com `AURORA_SIMULAR 1` no `aurora_config.h` para testar Wi-Fi e servidor antes de ligar o
 sensor. Para os sensores alcançarem o computador, rode o servidor com
 `aurora servir --host 0.0.0.0`.
 

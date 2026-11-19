@@ -46,8 +46,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .topo-dentro { max-width: 1180px; margin: 0 auto; padding: 18px 20px 0; }
 .marca { display: flex; align-items: center; gap: 12px; }
 .marca .sol {
-  width: 42px; height: 42px; border-radius: 50%; flex: none;
-  background: radial-gradient(circle at 35% 35%, #ffe08a, #f2a541 50%, #2f6fae 100%);
+  width: 44px; height: 44px; border-radius: 11px; flex: none;
+  background: url("/static/icones/icone-192.png") center / cover;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
 }
 .marca h1 { margin: 0; font-size: 1.55rem; letter-spacing: 0.01em; }
 .marca p { margin: 0; opacity: 0.85; font-size: 0.95rem; }
@@ -168,3 +169,19 @@ button:hover { border-color: var(--verde); }
 .filtros.sem-moldura { border: 0; padding: 8px 0 0; background: none; }
 .espaco-acima { margin-top: 12px; }
 section.painel + section.painel { margin-top: 12px; }
+
+/* app instalável */
+.marca-texto { flex: 1; }
+.botao-instalar {
+  flex: none; background: #fff; color: var(--verde); border: 0; font-weight: 700;
+  border-radius: 999px; padding: 8px 16px;
+}
+@media (prefers-color-scheme: dark) { .botao-instalar { background: var(--verde-claro); color: #fff; } }
+.dica-iphone { margin: 10px 0 0; font-size: 0.88rem; opacity: 0.9; }
+.aviso-offline {
+  border-radius: var(--raio); padding: 10px 14px; margin-bottom: 14px;
+  background: color-mix(in srgb, var(--ceu) 14%, var(--cartao)); border: 1px solid var(--ceu);
+}
+@media (display-mode: standalone) {
+  .topo-dentro { padding-top: max(18px, env(safe-area-inset-top)); }
+}

@@ -1,5 +1,5 @@
 # Segredos — NUNCA vão para o Git
-firmware/include/config.h
+firmware/include/aurora_config.h
 .env
 
 # Banco de dados (dados reais das salas)
