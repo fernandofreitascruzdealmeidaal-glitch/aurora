@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aurora-servidor"
-version = "0.2.0"
+version = "0.3.0"
 description = "Aurora: base de sustentabilidade de Minas Gerais e monitoramento ambiental de salas de aula."
 requires-python = ">=3.10"
 dependencies = [

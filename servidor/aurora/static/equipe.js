@@ -121,6 +121,12 @@
 
   async function carregarFontes() {
     const d = await api("GET", "/api/v1/equipe/resumo");
+    const c = d.chat;
+    const dolar = (v) => `US$ ${v.toFixed(2).replace(".", ",")}`;
+    $("chat-uso").replaceChildren(c.ligado
+      ? el("p", {}, `Ligado (modelo ${c.modelo}). Hoje: ${c.hoje.mensagens} de ${c.limite_dia} mensagens, cerca de ${dolar(c.hoje.custo_estimado_usd)}. `,
+        `Neste mês: ${c.mes.mensagens} mensagens, cerca de ${dolar(c.mes.custo_estimado_usd)}. A conta oficial fica no Console da Anthropic.`)
+      : el("p", {}, "Desligado. Para ligar, cole a chave da API da Anthropic no painel da Aurora, no computador onde ela roda."));
     const linhas = d.fontes.map((f) => {
       const alternar = el("button", { type: "button" }, f.ativa ? "Desativar" : "Ativar");
       alternar.addEventListener("click", async () => {

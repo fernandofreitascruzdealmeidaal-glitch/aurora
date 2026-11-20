@@ -41,6 +41,12 @@ class Configuracao:
     idade_maxima_s: int = 7 * 24 * 3600  # leituras com mais de 7 dias são recusadas
     intervalo_esperado_s: int = 60  # de quanto em quanto tempo o sensor envia
     coleta_a_cada_min: int = 0  # 0 = coleta automática desligada (use `aurora coletar`)
+    # Chat com o Claude (desligado sem chave). A chave vem da variável ou do arquivo do painel.
+    claude_chave: str | None = None
+    claude_arquivo: str | None = None
+    claude_modelo: str = "claude-haiku-4-5"
+    claude_limite_dia: int = 150  # mensagens por dia, somando todo mundo
+    claude_limite_visitante: int = 15  # mensagens por aparelho a cada 10 minutos
 
     def __post_init__(self) -> None:
         try:
@@ -69,4 +75,9 @@ class Configuracao:
             idade_maxima_s=_inteiro("AURORA_IDADE_MAXIMA_S", 7 * 24 * 3600, 60, 90 * 24 * 3600),
             intervalo_esperado_s=_inteiro("AURORA_INTERVALO_S", 60, 5, 3600),
             coleta_a_cada_min=_inteiro("AURORA_COLETA_MIN", 0, 0, 1440),
+            claude_chave=os.environ.get("AURORA_CLAUDE_CHAVE") or None,
+            claude_arquivo=os.environ.get("AURORA_CLAUDE_ARQUIVO") or None,
+            claude_modelo=os.environ.get("AURORA_CLAUDE_MODELO") or "claude-haiku-4-5",
+            claude_limite_dia=_inteiro("AURORA_CLAUDE_LIMITE_DIA", 150, 0, 10_000),
+            claude_limite_visitante=_inteiro("AURORA_CLAUDE_LIMITE_VISITANTE", 15, 1, 200),
         )

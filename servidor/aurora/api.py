@@ -8,6 +8,8 @@ Rotas principais:
   GET  /api/v1/dispositivos/{id}/padroes      média por hora do dia
   GET  /api/v1/dispositivos/{id}/leituras     leituras brutas
   GET  /api/v1/dispositivos/{id}/exportar.csv planilha
+  GET  /api/v1/chat/estado                    o chat com o Claude está ligado?
+  POST /api/v1/chat                           manda a conversa e recebe a resposta do Claude
   GET  /saude                                 o servidor e o banco estão funcionando?
   GET  /                                      painel
 """
@@ -35,7 +37,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, HttpUrl, ValidationError
 from starlette.concurrency import run_in_threadpool
 
-from aurora import __version__, coleta, conteudo, db, servico
+from aurora import __version__, chat, coleta, conteudo, db, servico
 from aurora.catalogo import REGIOES, TIPOS
 from aurora.config import Configuracao
 from aurora.limites import referencias_publicas
@@ -101,6 +103,7 @@ def criar_app(
     cfg: Configuracao | None = None,
     relogio: Callable[[], float] = time.time,
     baixador: coleta.Baixador = coleta.baixar,
+    enviar_claude: chat.Enviador = chat.enviar_para_anthropic,
 ) -> FastAPI:
     cfg = cfg or Configuracao.do_ambiente()
     db.inicializar(cfg.caminho_banco)
@@ -188,6 +191,10 @@ def criar_app(
     @app.exception_handler(conteudo.ErroDeConteudo)
     async def _conteudo(_: Request, exc: conteudo.ErroDeConteudo) -> JSONResponse:
         return JSONResponse({"detail": str(exc)}, 400)
+
+    @app.exception_handler(chat.ErroDoChat)
+    async def _chat(_: Request, exc: chat.ErroDoChat) -> JSONResponse:
+        return JSONResponse({"detail": str(exc)}, exc.status)
 
     @app.exception_handler(Exception)
     async def _inesperado(request: Request, exc: Exception) -> JSONResponse:
@@ -389,11 +396,62 @@ def criar_app(
     ) -> list[dict[str, Any]]:
         return conteudo.listar_dicas(conn, categoria)
 
+    # ------------------------------------------------------------ chat com o Claude
+
+    limite_visitante = chat.LimitePorVisitante(cfg.claude_limite_visitante)
+
+    def chave_claude() -> str | None:
+        return chat.ler_chave(cfg.claude_chave, cfg.claude_arquivo)
+
+    @app.get("/api/v1/chat/estado", tags=["chat"])
+    def chat_estado() -> dict[str, Any]:
+        ligado = chave_claude() is not None and cfg.claude_limite_dia > 0
+        return {
+            "disponivel": ligado,
+            "mensagem": None if ligado else "O chat ainda não foi ligado pela equipe da Aurora.",
+        }
+
+    @app.post("/api/v1/chat", tags=["chat"])
+    async def conversar(request: Request) -> dict[str, Any]:
+        corpo = await _ler_corpo_limitado(request, 64_000)
+        try:
+            pedido = chat.PedidoChat.model_validate_json(corpo)
+        except ValidationError as erro:
+            raise HTTPException(422, _texto_erro(erro)) from erro
+        visitante = request.client.host if request.client else "desconhecido"
+        if not limite_visitante.permitir(visitante, relogio()):
+            raise HTTPException(
+                429, "Muitas mensagens seguidas. Espere alguns minutos e tente de novo."
+            )
+
+        def _responder() -> dict[str, Any]:
+            with db.abrir(cfg.caminho_banco) as conn:
+                return chat.conversar(
+                    conn,
+                    pedido,
+                    chave=chave_claude(),
+                    modelo=cfg.claude_modelo,
+                    limite_dia=cfg.claude_limite_dia,
+                    hoje=hoje(),
+                    enviar=enviar_claude,
+                )
+
+        return await run_in_threadpool(_responder)
+
     # ------------------------------------------------------------ área da equipe
 
     @app.get("/api/v1/equipe/resumo", dependencies=Equipe, tags=["equipe"])
     def equipe_resumo(conn: Conexao) -> dict[str, Any]:
-        return {**conteudo.contagens(conn), "fontes": conteudo.listar_fontes(conn)}
+        return {
+            **conteudo.contagens(conn),
+            "fontes": conteudo.listar_fontes(conn),
+            "chat": {
+                "ligado": chave_claude() is not None,
+                "modelo": cfg.claude_modelo,
+                "limite_dia": cfg.claude_limite_dia,
+                **chat.uso(conn, hoje()),
+            },
+        }
 
     @app.get("/api/v1/equipe/itens", dependencies=Equipe, tags=["equipe"])
     def equipe_itens(

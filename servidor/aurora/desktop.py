@@ -6,7 +6,7 @@ O que faz ao abrir:
 3. Liga o servidor da Aurora em segundo plano.
 4. Abre o site numa janela própria (Edge ou Chrome em "modo app"; senão, o navegador padrão).
 5. Mostra uma janelinha de controle: abrir de novo, área da equipe, endereço para o celular,
-   senha da equipe e o botão Encerrar.
+   senha da equipe, a chave do chat com o Claude e o botão Encerrar.
 
 Se a Aurora já estiver aberta, um novo clique só abre outra janela do app (não liga um
 segundo servidor em cima do mesmo banco de dados).
@@ -29,8 +29,11 @@ import time
 import urllib.request
 import webbrowser
 from pathlib import Path
+from typing import Any
 
 NOME_TOKEN = "senha-da-equipe.txt"  # noqa: S105 — nome do arquivo, não a senha
+NOME_CHAVE_CLAUDE = "chave-claude.txt"
+URL_CRIAR_CHAVE = "https://console.anthropic.com/settings/keys"
 PORTA_PADRAO = 8000
 log = logging.getLogger("aurora.desktop")
 
@@ -242,6 +245,8 @@ def painel(servidor: ServidorAurora, senha: str, pasta: Path) -> None:  # pragma
         aviso.grid(column=1, row=linha + 2, sticky="w")
         linha += 3
 
+    linha = _secao_chat(raiz, quadro, pasta, linha)
+
     ttk.Label(quadro, text=f"Dados guardados em: {pasta}", foreground="#5c6b61").grid(
         column=0, row=linha, columnspan=2, sticky="w", pady=(10, 8)
     )
@@ -254,6 +259,62 @@ def painel(servidor: ServidorAurora, senha: str, pasta: Path) -> None:  # pragma
     )
     raiz.protocol("WM_DELETE_WINDOW", encerrar)
     raiz.mainloop()
+
+
+def _secao_chat(raiz: Any, quadro: Any, pasta: Path, linha: int) -> int:  # pragma: no cover
+    """Campo para colar (ou apagar) a chave da API da Anthropic que liga o chat."""
+    from tkinter import ttk
+
+    from aurora import chat
+
+    arquivo = pasta / NOME_CHAVE_CLAUDE
+    ttk.Separator(quadro).grid(column=0, row=linha, columnspan=2, sticky="ew", pady=(14, 6))
+    ttk.Label(quadro, text="Chat com o Claude", font=("Segoe UI", 10, "bold")).grid(
+        column=0, row=linha + 1, columnspan=2, sticky="w"
+    )
+    situacao = ttk.Label(quadro, text="", foreground="#5c6b61", wraplength=380)
+    situacao.grid(column=0, row=linha + 2, columnspan=2, sticky="w")
+    campo = ttk.Entry(quadro, width=40, show="•")
+    campo.grid(column=0, row=linha + 3, sticky="ew", padx=(0, 6), pady=3)
+
+    def atualizar(texto: str | None = None) -> None:
+        ligado = chat.ler_chave(None, str(arquivo)) is not None
+        situacao.configure(
+            text=texto
+            or (
+                "Ligado. A chave fica só neste computador."
+                if ligado
+                else "Desligado. Cole aqui a chave da API da Anthropic (começa com sk-ant-)."
+            )
+        )
+        apagar.configure(state="normal" if ligado else "disabled")
+
+    def salvar() -> None:
+        try:
+            chat.salvar_chave(arquivo, campo.get())
+        except ValueError as erro:
+            atualizar(str(erro))
+            return
+        campo.delete(0, "end")
+        atualizar("Chave salva. O chat já está ligado no app.")
+
+    def remover() -> None:
+        chat.apagar_chave(arquivo)
+        atualizar("Chave apagada. O chat foi desligado.")
+
+    ttk.Button(quadro, text="Salvar chave", command=salvar).grid(
+        column=1, row=linha + 3, sticky="w"
+    )
+    botoes = ttk.Frame(quadro)
+    botoes.grid(column=0, row=linha + 4, columnspan=2, sticky="w")
+    ttk.Button(
+        botoes, text="Criar uma chave", command=lambda: webbrowser.open(URL_CRIAR_CHAVE)
+    ).grid(column=0, row=0, padx=(0, 6))
+    apagar = ttk.Button(botoes, text="Apagar chave", command=remover)
+    apagar.grid(column=1, row=0)
+    raiz.bind("<Return>", lambda _e: salvar() if campo.get() else None)
+    atualizar()
+    return linha + 5
 
 
 def avisar_erro(mensagem: str) -> None:  # pragma: no cover — janela de erro
@@ -301,6 +362,7 @@ def main(argv: list[str] | None = None) -> int:
         senha = senha_da_equipe(pasta)
         os.environ["AURORA_BANCO"] = str(pasta / "aurora.db")
         os.environ["AURORA_TOKEN_ADMIN"] = senha
+        os.environ.setdefault("AURORA_CLAUDE_ARQUIVO", str(pasta / NOME_CHAVE_CLAUDE))
         porta = porta_livre(args.porta)
         host = "127.0.0.1" if args.so_neste_computador else "0.0.0.0"  # noqa: S104
 
@@ -316,6 +378,10 @@ def main(argv: list[str] | None = None) -> int:
                 f"http://127.0.0.1:{porta}/api/v1/conteudo/inicio", timeout=5
             ) as r:
                 ok = ok and bool(json.loads(r.read())["proximas_datas"])
+            with urllib.request.urlopen(
+                f"http://127.0.0.1:{porta}/api/v1/chat/estado", timeout=5
+            ) as r:
+                ok = ok and "disponivel" in json.loads(r.read())
             servidor.desligar()
             print("Aurora OK" if ok else "Aurora com problema")
             return 0 if ok else 1

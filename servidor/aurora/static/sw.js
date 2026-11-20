@@ -5,9 +5,9 @@
 //  - Páginas e arquivos do site: abre da memória e atualiza em segundo plano.
 //  - Conteúdo público (/api/v1/conteudo/...): tenta a internet primeiro; sem rede, usa a última
 //    cópia salva e avisa o app (cabeçalho X-Aurora-Offline) para mostrar "você está sem internet".
-//  - Área da equipe, sensores e qualquer envio (POST/PATCH/DELETE): NUNCA passa pela memória.
+//  - Área da equipe, sensores, chat e qualquer envio (POST/PATCH/DELETE): NUNCA passa pela memória.
 
-const VERSAO = "aurora-v2";
+const VERSAO = "aurora-v3";
 const CASCA = `${VERSAO}-casca`;
 const DADOS = `${VERSAO}-dados`;
 const ARQUIVOS_DA_CASCA = [

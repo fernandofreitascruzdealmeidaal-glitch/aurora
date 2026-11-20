@@ -383,9 +383,10 @@ def test_migracao_de_banco_v1(tmp_path):
         conn.execute("INSERT INTO dispositivos VALUES ('s1', 'S1', ?, 0, NULL)", ("a" * 64,))
     db.inicializar(caminho)
     with db.abrir(caminho) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 2
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == db.VERSAO_ESQUEMA == 3
         assert conn.execute("SELECT COUNT(*) FROM dispositivos").fetchone()[0] == 1
         assert conn.execute("SELECT COUNT(*) FROM itens").fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM chat_uso").fetchone()[0] == 0
 
 
 def test_app_instalavel(amb):

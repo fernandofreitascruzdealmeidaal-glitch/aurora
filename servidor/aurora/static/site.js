@@ -235,6 +235,130 @@
       ]).flat());
   }
 
+
+  // ------------------------------------------------------------ chat com o Claude
+  // A conversa fica só na memória desta aba (some ao fechar). O servidor não guarda conversas.
+
+  const conversa = [];
+  const SUGESTOES = [
+    "Quais feiras de ciências estão chegando?",
+    "Como economizar água na escola?",
+    "Ideias de projeto de ciências sobre a qualidade do ar",
+    "Onde posso fazer voluntariado ambiental em BH?",
+  ];
+
+  function textoComLinks(texto) {
+    // Só http/https viram links; o resto entra como texto puro.
+    const partes = [];
+    let ultimo = 0;
+    for (const m of texto.matchAll(/https?:\/\/[^\s<>"')\]]+/g)) {
+      let url = m[0].replace(/[.,;:!?]+$/, "");
+      partes.push(texto.slice(ultimo, m.index));
+      const seguro = linkSeguro(url);
+      partes.push(seguro ? el("a", { href: seguro, target: "_blank", rel: "noopener noreferrer" }, url) : url);
+      ultimo = m.index + url.length;
+    }
+    partes.push(texto.slice(ultimo));
+    return partes;
+  }
+
+  function balao(m) {
+    return el("div", { class: `balao ${m.papel === "usuario" ? "balao-eu" : "balao-claude"}` },
+      el("span", { class: "quem" }, m.papel === "usuario" ? "Você" : "Claude"),
+      el("p", {}, textoComLinks(m.texto)));
+  }
+
+  async function enviarChat(mensagens) {
+    const controle = new AbortController();
+    const relogio = setTimeout(() => controle.abort(), 90000);
+    try {
+      const r = await fetch("/api/v1/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mensagens }),
+        signal: controle.signal,
+      });
+      let j = null;
+      try { j = await r.json(); } catch { /* sem JSON */ }
+      if (!r.ok) throw new Error((j && typeof j.detail === "string") ? j.detail : `Erro ${r.status}`);
+      return j.resposta;
+    } catch (e) {
+      if (e.name === "AbortError") throw new Error("O Claude demorou demais. Tente de novo.");
+      if (e instanceof TypeError) throw new Error("Sem conexão com o servidor da Aurora.");
+      throw e;
+    } finally {
+      clearTimeout(relogio);
+    }
+  }
+
+  async function paginaChat(vista) {
+    let estado = { disponivel: false, mensagem: "Sem conexão com o servidor da Aurora." };
+    try {
+      const r = await fetch("/api/v1/chat/estado");
+      if (r.ok) estado = await r.json();
+    } catch { /* sem rede */ }
+
+    const aviso = el("p", { class: "aviso-curadoria" },
+      "Converse com o Claude, a IA da Anthropic, sobre sustentabilidade, ciência e o que tem na Aurora. ",
+      "As mensagens vão para a Anthropic para serem respondidas: não escreva nome completo, endereço, telefone ou outros dados pessoais. ",
+      "O Claude pode errar — confira datas e regras no site de quem organiza.");
+
+    if (!estado.disponivel) {
+      vista.replaceChildren(el("h2", {}, "Pergunte ao Claude"), aviso,
+        el("div", { class: "painel" }, el("p", {}, estado.mensagem || "O chat está desligado.")));
+      return;
+    }
+
+    const lista = el("div", { class: "conversa", "aria-live": "polite" });
+    const caixa = el("textarea", { rows: "2", maxlength: "1500", placeholder: "Escreva sua pergunta…", "aria-label": "Sua pergunta" });
+    const enviar = el("button", { type: "submit", class: "botao-principal" }, "Enviar");
+    const limpar = el("button", { type: "button" }, "Nova conversa");
+    const form = el("form", { class: "chat-form" }, caixa, el("div", { class: "chat-botoes" }, enviar, limpar));
+    const sugestoes = el("div", { class: "chips" }, SUGESTOES.map((t) => {
+      const b = el("button", { type: "button", class: "chip" }, t);
+      b.addEventListener("click", () => { caixa.value = t; form.requestSubmit(); });
+      return b;
+    }));
+
+    function desenhar(pensando = false) {
+      const baloes = conversa.map(balao);
+      if (pensando) baloes.push(el("div", { class: "balao balao-claude pensando" }, el("span", { class: "quem" }, "Claude"), el("p", {}, "Pensando…")));
+      lista.replaceChildren(...baloes);
+      sugestoes.hidden = conversa.length > 0;
+      lista.lastElementChild?.scrollIntoView({ block: "nearest" });
+    }
+
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const texto = caixa.value.trim();
+      if (!texto || enviar.disabled) return;
+      conversa.push({ papel: "usuario", texto });
+      caixa.value = "";
+      enviar.disabled = true;
+      mostrarErro("");
+      desenhar(true);
+      try {
+        const resposta = await enviarChat(conversa.slice(-20));
+        conversa.push({ papel: "claude", texto: resposta });
+      } catch (e) {
+        conversa.pop();
+        caixa.value = texto;
+        mostrarErro(e.message);
+      } finally {
+        enviar.disabled = false;
+        desenhar();
+        caixa.focus();
+      }
+    });
+    caixa.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); form.requestSubmit(); }
+    });
+    limpar.addEventListener("click", () => { conversa.length = 0; mostrarErro(""); desenhar(); caixa.focus(); });
+
+    vista.replaceChildren(el("h2", {}, "Pergunte ao Claude"), aviso, sugestoes, lista, form);
+    desenhar();
+  }
+
   // ------------------------------------------------------------ rotas
 
   const ROTAS = {
@@ -262,6 +386,7 @@
     }),
     datas: paginaDatas,
     dicas: paginaDicas,
+    chat: paginaChat,
   };
 
   async function navegar() {

@@ -18,7 +18,7 @@ from pathlib import Path
 
 from aurora.limites import FAIXAS_FISICAS
 
-VERSAO_ESQUEMA = 2
+VERSAO_ESQUEMA = 3
 
 
 def _check(coluna: str) -> str:
@@ -118,6 +118,16 @@ CREATE TABLE IF NOT EXISTS dicas (
 );
 """
 
+# Chat com o Claude: só contagens por dia (as conversas não são guardadas).
+ESQUEMA_V3 = """
+CREATE TABLE IF NOT EXISTS chat_uso (
+    dia       TEXT PRIMARY KEY,
+    mensagens INTEGER NOT NULL DEFAULT 0 CHECK (mensagens >= 0),
+    entrada   INTEGER NOT NULL DEFAULT 0 CHECK (entrada >= 0),
+    saida     INTEGER NOT NULL DEFAULT 0 CHECK (saida >= 0)
+);
+"""
+
 
 def conectar(caminho: str | Path) -> sqlite3.Connection:
     conn = sqlite3.connect(
@@ -174,7 +184,10 @@ def inicializar(caminho: str | Path) -> None:
         if versao < 2:
             conn.executescript(ESQUEMA_V2)
             conn.execute("PRAGMA user_version = 2")
-        # Próximas migrações: `if versao < 3: ...` — nunca altere as anteriores.
+        if versao < 3:
+            conn.executescript(ESQUEMA_V3)
+            conn.execute("PRAGMA user_version = 3")
+        # Próximas migrações: `if versao < 4: ...` — nunca altere as anteriores.
 
 
 def verificar(conn: sqlite3.Connection) -> bool:

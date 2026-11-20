@@ -15,7 +15,7 @@ android {
         minSdk 24
         targetSdk 34
         versionCode((System.getenv('VERSAO_CODIGO') ?: '1').toInteger())
-        versionName '0.2.0'
+        versionName '0.3.0'
         // Se o servidor tiver endereço fixo (ex.: https://aurora.suaescola.org), o app já abre nele.
         buildConfigField 'String', 'SERVIDOR_PADRAO', "\"${servidorPadrao}\""
     }

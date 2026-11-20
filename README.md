@@ -127,6 +127,44 @@ endereço público com HTTPS. Opções comuns: um serviço de hospedagem de Pyth
 Railway) ou um túnel (como Cloudflare Tunnel) a partir do computador da escola. Isso envolve conta
 e configuração feitas por um adulto responsável; lembre-se de definir `AURORA_TOKEN_ADMIN`.
 
+## Chat com o Claude
+
+A aba **Pergunte ao Claude** (no site, no app do celular e no computador) conversa com o Claude,
+a IA da Anthropic, sobre sustentabilidade, ciência, projetos escolares e o que está na Aurora. O
+Claude recebe junto, a cada pergunta, a agenda, as oportunidades, as notícias e as próximas datas
+da própria Aurora, e foi orientado a não inventar datas, locais nem links.
+
+**Como ligar (uma vez):**
+
+1. Um **adulto** responsável cria uma conta em <https://console.anthropic.com> (a API exige 18
+   anos ou mais), coloca crédito e cria uma chave em *API keys*. A chave começa com `sk-ant-`.
+2. Ainda no Console, em *Limits*, defina um **limite de gasto por mês**. É a garantia de que a
+   conta nunca passa do valor combinado.
+3. No painel da Aurora (a janelinha que abre junto com o app no computador), cole a chave em
+   **Chat com o Claude** e clique em **Salvar chave**. O chat liga na hora; o botão
+   **Apagar chave** desliga.
+
+**Onde fica a chave:** só no computador que roda a Aurora (`chave-claude.txt`, na pasta de dados).
+Ela nunca vai para o site, para o app do celular nem para o GitHub. Quem usa o app conversa com o
+servidor da Aurora, e só o servidor fala com a Anthropic.
+
+**Quanto custa:** usa o Claude Haiku 4.5, o modelo mais barato (US$ 1 por milhão de tokens de
+entrada e US$ 5 por milhão de saída). Cada pergunta custa entre **meio e um centavo de dólar**,
+porque leva junto o conteúdo da Aurora. No limite de 150 mensagens por dia, o máximo fica perto
+de US$ 1,50 por dia. A área da equipe mostra as mensagens e o custo estimado
+do dia e do mês; a conta oficial é a do Console.
+
+**Proteções:**
+
+- No máximo **150 mensagens por dia** somando todo mundo (`AURORA_CLAUDE_LIMITE_DIA`) e **15 a
+  cada 10 minutos por aparelho** (`AURORA_CLAUDE_LIMITE_VISITANTE`).
+- Respostas curtas e só as últimas mensagens da conversa vão para a API.
+- As conversas **não são guardadas** na Aurora: o banco só conta mensagens e tokens por dia. A
+  conversa some quando a aba é fechada.
+- O app avisa para não escrever dados pessoais, porque as mensagens vão para a Anthropic.
+- As regras do Claude pedem linguagem para estudantes, ajuda para pensar (sem entregar trabalho
+  pronto) e respostas só sobre os temas da Aurora.
+
 ## Área da equipe (curadoria)
 
 A área da equipe fica em **http://127.0.0.1:8000/equipe** e só funciona com um token secreto:
@@ -280,6 +318,11 @@ Por variáveis de ambiente (todas opcionais):
 | `AURORA_INTERVALO_S` | `60` | Intervalo de envio dos sensores (define quando um sensor está "sem sinal") |
 | `AURORA_TOKEN_ADMIN` | (vazio) | Liga a área da equipe (mín. 16 caracteres, diferente do token do painel) |
 | `AURORA_COLETA_MIN` | `0` | Coleta automática de notícias a cada N minutos (15 a 1440; 0 = desligada) |
+| `AURORA_CLAUDE_CHAVE` | (vazio) | Chave da API da Anthropic (alternativa ao painel); sem chave o chat fica desligado |
+| `AURORA_CLAUDE_ARQUIVO` | (pasta de dados) | Arquivo onde o painel guarda a chave |
+| `AURORA_CLAUDE_MODELO` | `claude-haiku-4-5` | Modelo usado no chat |
+| `AURORA_CLAUDE_LIMITE_DIA` | `150` | Mensagens por dia no total (0 = chat desligado) |
+| `AURORA_CLAUDE_LIMITE_VISITANTE` | `15` | Mensagens por aparelho a cada 10 minutos |
 
 As faixas de referência ficam em `servidor/aurora/limites.py`. Os limites de **atenção** seguem
 a ABNT NBR 17037, que desde 2024 substitui a antiga Resolução ANVISA RE nº 9/2003 (aquela do
@@ -312,6 +355,9 @@ aurora coletar                                # busca notícias novas (ficam pen
 
 - **Conteúdo envelhece.** Eventos anuais estão com data *prevista*; quando a organização divulgar
   a data oficial, atualizem na área da equipe e marquem "Data confirmada".
+- **O Claude pode errar.** Ele recebe o conteúdo da Aurora e é orientado a não inventar, mas
+  datas e regras devem sempre ser conferidas no site de quem organiza. O chat precisa de internet
+  no computador da Aurora.
 - **Idade mínima.** Algumas oportunidades (brigadas, vagas) são só para adultos — isso está escrito
   em cada item. Menores de 16 só podem trabalhar como jovem aprendiz (a partir dos 14).
 - **Rede da escola.** Se a internet da escola usar proxy ou bloquear sites, a coleta mostra o erro

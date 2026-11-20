@@ -185,3 +185,17 @@ section.painel + section.painel { margin-top: 12px; }
 @media (display-mode: standalone) {
   .topo-dentro { padding-top: max(18px, env(safe-area-inset-top)); }
 }
+
+/* ---------- chat com o Claude ---------- */
+.chips[hidden] { display: none; }
+.conversa { display: grid; gap: 10px; margin: 16px 0; }
+.balao { max-width: min(720px, 92%); padding: 10px 14px; border-radius: 14px; border: 1px solid var(--borda); }
+.balao p { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.balao .quem { font-size: 0.78rem; font-weight: 700; color: var(--suave); }
+.balao-eu { justify-self: end; background: var(--verde-claro); border-color: transparent; }
+.balao-claude { justify-self: start; background: var(--cartao); }
+.pensando p { color: var(--suave); font-style: italic; }
+.chat-form { display: grid; gap: 8px; position: sticky; bottom: 0; background: var(--fundo); padding: 10px 0; }
+.chat-form textarea { width: 100%; box-sizing: border-box; resize: vertical; font: inherit; }
+.chat-botoes { display: flex; gap: 8px; }
+.chat-botoes .botao-principal { flex: 1; }
